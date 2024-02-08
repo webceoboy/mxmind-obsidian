@@ -215,7 +215,7 @@ class SampleSettingTab extends PluginSettingTab {
 	}
 }
 export class ExampleView extends ItemView {
-	navigation: boolean=false;
+	navigation: boolean = false;
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
 
@@ -230,7 +230,7 @@ export class ExampleView extends ItemView {
 	}
 
 	async onOpen() {
-		
+
 		const container = this.containerEl.children[1];
 		container.empty();
 		container.setAttribute('style', Platform.isMobile ? 'padding:0;overflow:hidden;' : 'padding:0;padding-bottom:30px;overflow:hidden;');
