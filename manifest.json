@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "Mxmind",
+	"name": "Mxmind",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Mind map for  obsidian",
+	"author": "Mxmind",
+	"authorUrl": "https://mxmind.com",
+	"fundingUrl": "https://mxmind.com/page/pricing",
 	"isDesktopOnly": false
 }
