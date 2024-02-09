@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf, Platform } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf, Platform, moment } from 'obsidian';
 import { platform } from 'os';
 let iframe: HTMLIFrameElement | null = null;
 let ready: boolean = false;
@@ -91,7 +91,7 @@ export default class MyPlugin extends Plugin {
 
 				menu.addItem((item) => {
 					item
-						.setTitle("Mind map")
+						.setTitle("Open as mindmap")
 						.setIcon("document")
 						.onClick(async () => {
 							const leaf = await this.activateView();
@@ -239,7 +239,7 @@ export class ExampleView extends ItemView {
 			cls: "mxmind-iframe",
 			attr: {
 				style: 'width:100%;height:100%;',
-				src: 'https://mxmind.com/mindmap/new?utm_source=obsidian&theme=' + getTheme(), frameborder: '0'
+				src: 'https://mxmind.com/mindmap/new?utm_source=obsidian&theme=' + getTheme() + '&lng=' + getLanguage(), frameborder: '0'
 			}
 		}, (el) => {
 			iframe = el;
@@ -285,4 +285,12 @@ function postIframeMessage(method: string, params: Array<any>) {
 }
 function getTheme() {
 	return document.body.hasClass("theme-dark") ? 'dark' : 'light';
+}
+function getLanguage() {
+	const locale = moment.locale();
+	const arr = locale.split('-');
+	if (arr[1]) {
+		arr[1] = arr[1].toString().toUpperCase();
+	}
+	return arr.join('-');
 }
