@@ -3,19 +3,19 @@ let iframe: HTMLIFrameElement | null = null;
 let ready: boolean = false;
 // Remember to rename these classes and interfaces!
 export const VIEW_TYPE_EXAMPLE = "mxmind-view";
-interface MyPluginSettings {
-	mySetting: string;
-}
+// interface MyPluginSettings {
+// 	mySetting: string;
+// }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+// const DEFAULT_SETTINGS: MyPluginSettings = {
+// 	mySetting: 'default'
+// }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class MxmindPlugin extends Plugin {
+	//settings: MyPluginSettings;
 
 	async onload() {
-		await this.loadSettings();
+		//await this.loadSettings();
 		this.registerView(
 			VIEW_TYPE_EXAMPLE,
 			(leaf) => new MxmindIframeView(leaf)
@@ -27,7 +27,7 @@ export default class MyPlugin extends Plugin {
 			this.toggleView();
 		});
 		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('mxmind');
+		//ribbonIconEl.addClass('mxmind');
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		// const statusBarItemEl = this.addStatusBarItem();
@@ -113,13 +113,13 @@ export default class MyPlugin extends Plugin {
 
 	}
 
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
+	// async loadSettings() {
+	// 	this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	// }
 
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+	// async saveSettings() {
+	// 	await this.saveData(this.settings);
+	// }
 	async toggleView() {
 		const { workspace } = this.app;
 

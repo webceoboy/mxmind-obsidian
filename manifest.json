@@ -1,7 +1,7 @@
 {
 	"id": "mxmind",
 	"name": "Mxmind Mindmap",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"minAppVersion": "0.15.0",
 	"description": "Mind map for obsidian,mindmap tool.",
 	"author": "mxmind",
