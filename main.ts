@@ -97,7 +97,7 @@ export default class MxmindPlugin extends Plugin {
 						.onClick(async () => {
 							//const leaf = await this.activateView();
 							const file=this.app.workspace.getActiveFile() as TFile;
-							const content=await this.app.vault.read(file);
+							const content=await this.app.vault.cachedRead(file);
 							//console.log(content)
 							const post = async () => {
 								//const texts = await Promise.all(vault.getMarkdownFiles().filter(f => f == file).map((file) => vault.cachedRead(file)))
