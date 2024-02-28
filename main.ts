@@ -1,4 +1,4 @@
-import {ItemView, moment, Platform, Plugin, TFile, WorkspaceLeaf} from 'obsidian';
+import {ItemView, moment, Platform, Plugin, Notice, WorkspaceLeaf} from 'obsidian';
 
 let iframe: HTMLIFrameElement | null = null;
 let ready = false;
@@ -88,7 +88,7 @@ export default class MxmindPlugin extends Plugin {
 				//@ts-ignore
 				const extension = file.extension as string
 				if (!extension || extension != 'md') return;
-				const { vault } = this.app;
+				//const {vault} = this.app;
 
 				menu.addItem((item) => {
 					item
@@ -96,8 +96,12 @@ export default class MxmindPlugin extends Plugin {
 						.setIcon("document")
 						.onClick(async () => {
 							//const leaf = await this.activateView();
-							const file=this.app.workspace.getActiveFile() as TFile;
-							const content=await this.app.vault.cachedRead(file);
+							const file = this.app.workspace.getActiveFile();
+							if (!file) {
+								new Notice('Open file error');
+								return;
+							}
+							const content = await this.app.vault.cachedRead(file);
 							//console.log(content)
 							const post = async () => {
 								//const texts = await Promise.all(vault.getMarkdownFiles().filter(f => f == file).map((file) => vault.cachedRead(file)))
@@ -125,7 +129,7 @@ export default class MxmindPlugin extends Plugin {
 	// 	await this.saveData(this.settings);
 	// }
 	async toggleView() {
-		const { workspace } = this.app;
+		const {workspace} = this.app;
 
 		let leaf: WorkspaceLeaf | null = null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
@@ -138,7 +142,7 @@ export default class MxmindPlugin extends Plugin {
 			// Our view could not be found in the workspace, create a new leaf
 			// in the right sidebar for it
 			leaf = workspace.getRightLeaf(false);
-			await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
+			await leaf.setViewState({type: VIEW_TYPE_EXAMPLE, active: true});
 		}
 		if (leaf.getViewState().active) {
 			iframe?.contentWindow?.postMessage({
@@ -149,8 +153,9 @@ export default class MxmindPlugin extends Plugin {
 		// "Reveal" the leaf in case it is in a collapsed sidebar
 		//workspace.revealLeaf(leaf);
 	}
+
 	async activateView() {
-		const { workspace } = this.app;
+		const {workspace} = this.app;
 
 		let leaf: WorkspaceLeaf | null = null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
@@ -162,7 +167,7 @@ export default class MxmindPlugin extends Plugin {
 			// Our view could not be found in the workspace, create a new leaf
 			// in the right sidebar for it
 			leaf = workspace.getRightLeaf(false);
-			await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
+			await leaf.setViewState({type: VIEW_TYPE_EXAMPLE, active: true});
 		}
 
 		// "Reveal" the leaf in case it is in a collapsed sidebar
@@ -170,6 +175,7 @@ export default class MxmindPlugin extends Plugin {
 		return leaf;
 
 	}
+
 	toggleCollapseRight() {
 		const rightSplit = this.app.workspace.rightSplit;
 
@@ -178,9 +184,9 @@ export default class MxmindPlugin extends Plugin {
 }
 
 
-
 export class MxmindIframeView extends ItemView {
-	navigation: boolean = false;
+	navigation = false;
+
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
 
@@ -204,7 +210,8 @@ export class MxmindIframeView extends ItemView {
 			cls: "mxmind-iframe",
 			attr: {
 				style: 'width:100%;height:100%;',
-				src: 'https://mxmind.com/mindmap/new?utm_source=obsidian&theme=' + getTheme() + '&lng=' + getLanguage(), frameborder: '0'
+				src: 'https://mxmind.com/mindmap/new?utm_source=obsidian&theme=' + getTheme() + '&lng=' + getLanguage(),
+				frameborder: '0'
 			}
 		}, (el) => {
 			iframe = el;
@@ -221,6 +228,7 @@ export class MxmindIframeView extends ItemView {
 		// Nothing to clean up.
 	}
 }
+
 function waitEditor() {
 	return new Promise((resolve, reject) => {
 		if (ready) {
@@ -241,6 +249,7 @@ function waitEditor() {
 		}
 	})
 }
+
 function postIframeMessage(method: string, params: Array<any>) {
 	if (!iframe) return;
 	iframe?.contentWindow?.postMessage({
@@ -248,9 +257,11 @@ function postIframeMessage(method: string, params: Array<any>) {
 		params
 	}, '*');
 }
+
 function getTheme() {
 	return document.body.hasClass("theme-dark") ? 'dark' : 'light';
 }
+
 function getLanguage() {
 	const locale = moment.locale();
 	const arr = locale.split('-');

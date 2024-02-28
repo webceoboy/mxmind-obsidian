@@ -3,7 +3,7 @@
 	"name": "Mxmind Mindmap",
 	"version": "1.0.4",
 	"minAppVersion": "0.15.0",
-	"description": "Mind map for obsidian,mindmap tool.",
+	"description": "Mind map,markdown to minding map,minding map tool.",
 	"author": "mxmind",
 	"authorUrl": "https://mxmind.com",
 	"isDesktopOnly": false
