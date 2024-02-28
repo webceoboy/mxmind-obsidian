@@ -1,6 +1,7 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf, Platform, moment } from 'obsidian';
+import {ItemView, moment, Platform, Plugin, TFile, WorkspaceLeaf} from 'obsidian';
+
 let iframe: HTMLIFrameElement | null = null;
-let ready: boolean = false;
+let ready = false;
 // Remember to rename these classes and interfaces!
 export const VIEW_TYPE_EXAMPLE = "mxmind-view";
 // interface MyPluginSettings {
@@ -94,10 +95,13 @@ export default class MxmindPlugin extends Plugin {
 						.setTitle("Open as mindmap")
 						.setIcon("document")
 						.onClick(async () => {
-							const leaf = await this.activateView();
+							//const leaf = await this.activateView();
+							const file=this.app.workspace.getActiveFile() as TFile;
+							const content=await this.app.vault.read(file);
+							//console.log(content)
 							const post = async () => {
-								const texts = await Promise.all(vault.getMarkdownFiles().filter(f => f == file).map((file) => vault.cachedRead(file)))
-								postIframeMessage('loadFromMd', [texts[0]]);
+								//const texts = await Promise.all(vault.getMarkdownFiles().filter(f => f == file).map((file) => vault.cachedRead(file)))
+								postIframeMessage('loadFromMd', [content]);
 							}
 							waitEditor().then(post).catch(post);
 						});
