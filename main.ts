@@ -1,4 +1,4 @@
-import {ItemView, moment, Platform, Plugin, Notice, WorkspaceLeaf} from 'obsidian';
+import {ItemView, moment, Platform, Plugin, WorkspaceLeaf, TFile} from 'obsidian';
 
 let iframe: HTMLIFrameElement | null = null;
 let ready = false;
@@ -88,25 +88,21 @@ export default class MxmindPlugin extends Plugin {
 				//@ts-ignore
 				const extension = file.extension as string
 				if (!extension || extension != 'md') return;
+				if (!(file instanceof TFile)) return;
 				//const {vault} = this.app;
-
 				menu.addItem((item) => {
 					item
 						.setTitle("Open as mindmap")
 						.setIcon("document")
 						.onClick(async () => {
 							//const leaf = await this.activateView();
-							const file = this.app.workspace.getActiveFile();
-							if (!file) {
-								new Notice('Open file error');
-								return;
-							}
 							const content = await this.app.vault.cachedRead(file);
 							//console.log(content)
 							const post = async () => {
 								//const texts = await Promise.all(vault.getMarkdownFiles().filter(f => f == file).map((file) => vault.cachedRead(file)))
 								postIframeMessage('loadFromMd', [content]);
 							}
+							await this.activateView();
 							waitEditor().then(post).catch(post);
 						});
 				});
@@ -167,9 +163,9 @@ export default class MxmindPlugin extends Plugin {
 			// Our view could not be found in the workspace, create a new leaf
 			// in the right sidebar for it
 			leaf = workspace.getRightLeaf(false);
-			await leaf.setViewState({type: VIEW_TYPE_EXAMPLE, active: true});
-		}
 
+		}
+		await leaf.setViewState({type: VIEW_TYPE_EXAMPLE, active: true});
 		// "Reveal" the leaf in case it is in a collapsed sidebar
 		workspace.revealLeaf(leaf);
 		return leaf;
