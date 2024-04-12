@@ -1,4 +1,11 @@
-import {ItemView, moment, Platform, Plugin, WorkspaceLeaf, TFile} from 'obsidian';
+import {
+	ItemView,
+	moment,
+	Platform,
+	Plugin,
+	WorkspaceLeaf,
+	TFile,
+} from "obsidian";
 
 let iframe: HTMLIFrameElement | null = null;
 let ready = false;
@@ -11,7 +18,31 @@ export const VIEW_TYPE_EXAMPLE = "mxmind-view";
 // const DEFAULT_SETTINGS: MyPluginSettings = {
 // 	mySetting: 'default'
 // }
+function getTheme() {
+	return document.body.hasClass("theme-dark") ? "dark" : "light";
+}
 
+function getLanguage() {
+	const locale = moment.locale();
+	const arr = locale.split("-");
+	if (arr[1]) {
+		arr[1] = arr[1].toString().toUpperCase();
+	}
+	return arr.join("-");
+}
+
+const getUrl = () => {
+	return (
+		"https://mxmind.com/mindmap/new?utm_source=obsidian&theme=" +
+		getTheme() +
+		"&lng=" +
+		getLanguage()
+	);
+};
+// const reOpen=()=>{
+// 	ready=false;
+// 	if(iframe)iframe.src=getUrl()+'&_='+(new Date).getTime();
+// }
 export default class MxmindPlugin extends Plugin {
 	//settings: MyPluginSettings;
 
@@ -22,11 +53,15 @@ export default class MxmindPlugin extends Plugin {
 			(leaf) => new MxmindIframeView(leaf)
 		);
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('network', 'Mxmind', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			//new Notice('This is a notice!');
-			this.toggleView();
-		});
+		const ribbonIconEl = this.addRibbonIcon(
+			"network",
+			"Mxmind",
+			(evt: MouseEvent) => {
+				// Called when the user clicks the icon.
+				//new Notice('This is a notice!');
+				this.toggleView();
+			}
+		);
 		// Perform additional things with the ribbon
 		//ribbonIconEl.addClass('mxmind');
 
@@ -82,40 +117,39 @@ export default class MxmindPlugin extends Plugin {
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 
-
 		this.registerEvent(
 			this.app.workspace.on("file-menu", (menu, file) => {
 				//@ts-ignore
-				const extension = file.extension as string
-				if (!extension || extension != 'md') return;
+				const extension = file.extension as string;
+				if (!extension || extension != "md") return;
 				if (!(file instanceof TFile)) return;
 				//const {vault} = this.app;
 				menu.addItem((item) => {
-					item
-						.setTitle("Open as mindmap")
+					item.setTitle("Open as mindmap")
 						.setIcon("document")
 						.onClick(async () => {
 							//const leaf = await this.activateView();
-							const content = await this.app.vault.cachedRead(file);
+							const content = await this.app.vault.cachedRead(
+								file
+							);
 							//console.log(content)
 							const post = async () => {
-								//const texts = await Promise.all(vault.getMarkdownFiles().filter(f => f == file).map((file) => vault.cachedRead(file)))
-								postIframeMessage('loadFromMd', [content]);
-							}
+								postIframeMessage("loadFromMd", [content]);
+							};
 							await this.activateView();
 							waitEditor().then(post).catch(post);
 						});
 				});
 			})
 		);
-		this.registerEvent(this.app.workspace.on("css-change", () => {
-			postIframeMessage('setTheme', [getTheme()]);
-		}));
+		this.registerEvent(
+			this.app.workspace.on("css-change", () => {
+				postIframeMessage("setTheme", [getTheme()]);
+			})
+		);
 	}
 
-	onunload() {
-
-	}
+	onunload() {}
 
 	// async loadSettings() {
 	// 	this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -125,7 +159,7 @@ export default class MxmindPlugin extends Plugin {
 	// 	await this.saveData(this.settings);
 	// }
 	async toggleView() {
-		const {workspace} = this.app;
+		const { workspace } = this.app;
 
 		let leaf: WorkspaceLeaf | null = null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
@@ -138,20 +172,23 @@ export default class MxmindPlugin extends Plugin {
 			// Our view could not be found in the workspace, create a new leaf
 			// in the right sidebar for it
 			leaf = workspace.getRightLeaf(false);
-			await leaf.setViewState({type: VIEW_TYPE_EXAMPLE, active: true});
+			await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
 		}
 		if (leaf.getViewState().active) {
-			iframe?.contentWindow?.postMessage({
-				method: 'fullScreen',
-				params: [],
-			}, '*');
+			iframe?.contentWindow?.postMessage(
+				{
+					method: "fullScreen",
+					params: [],
+				},
+				"*"
+			);
 		}
 		// "Reveal" the leaf in case it is in a collapsed sidebar
 		//workspace.revealLeaf(leaf);
 	}
 
 	async activateView() {
-		const {workspace} = this.app;
+		const { workspace } = this.app;
 
 		let leaf: WorkspaceLeaf | null = null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
@@ -163,13 +200,11 @@ export default class MxmindPlugin extends Plugin {
 			// Our view could not be found in the workspace, create a new leaf
 			// in the right sidebar for it
 			leaf = workspace.getRightLeaf(false);
-
 		}
-		await leaf.setViewState({type: VIEW_TYPE_EXAMPLE, active: true});
+		await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
 		// "Reveal" the leaf in case it is in a collapsed sidebar
 		workspace.revealLeaf(leaf);
 		return leaf;
-
 	}
 
 	toggleCollapseRight() {
@@ -179,13 +214,11 @@ export default class MxmindPlugin extends Plugin {
 	}
 }
 
-
 export class MxmindIframeView extends ItemView {
-	navigation = false;
+	navigation = true;
 
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
-
 	}
 
 	getViewType() {
@@ -197,27 +230,42 @@ export class MxmindIframeView extends ItemView {
 	}
 
 	async onOpen() {
-
 		const container = this.containerEl.children[1];
 		container.empty();
-		container.setAttribute('style', Platform.isMobile ? 'padding:0;overflow:hidden;' : 'padding:0;padding-bottom:30px;overflow:hidden;');
-
-		container.createEl("iframe", {
-			cls: "mxmind-iframe",
-			attr: {
-				style: 'width:100%;height:100%;',
-				src: 'https://mxmind.com/mindmap/new?utm_source=obsidian&theme=' + getTheme() + '&lng=' + getLanguage(),
-				frameborder: '0'
+		const int = setInterval(() => {
+			//@ts-ignore
+			if (this.leaf.tabHeaderEl&&this.leaf.tabHeaderEl.parentElement) {
+				clearInterval(int);
+				//@ts-ignore
+				this.leaf.tabHeaderEl.parentElement.style.display = "none";
 			}
-		}, (el) => {
-			iframe = el;
-		});
+		}, 100);
+		container.setAttribute(
+			"style",
+			Platform.isMobile
+				? "padding:0;overflow:hidden;"
+				: "padding:0;padding-bottom:30px;overflow:hidden;"
+		);
+
+		container.createEl(
+			"iframe",
+			{
+				cls: "mxmind-iframe",
+				attr: {
+					style: "width:100%;height:100%;",
+					src: getUrl(),
+					frameborder: "0",
+				},
+			},
+			(el) => {
+				iframe = el;
+			}
+		);
 		container.win.onmessage = (event: MessageEvent) => {
-			if (event.data.event && event.data.event == 'editor-ready') {
+			if (event.data.event && event.data.event == "editor-ready") {
 				ready = true;
 			}
-
-		}
+		};
 	}
 
 	async onClose() {
@@ -243,26 +291,16 @@ function waitEditor() {
 				}
 			}, 100);
 		}
-	})
+	});
 }
 
 function postIframeMessage(method: string, params: Array<any>) {
 	if (!iframe) return;
-	iframe?.contentWindow?.postMessage({
-		method,
-		params
-	}, '*');
-}
-
-function getTheme() {
-	return document.body.hasClass("theme-dark") ? 'dark' : 'light';
-}
-
-function getLanguage() {
-	const locale = moment.locale();
-	const arr = locale.split('-');
-	if (arr[1]) {
-		arr[1] = arr[1].toString().toUpperCase();
-	}
-	return arr.join('-');
+	iframe?.contentWindow?.postMessage(
+		{
+			method,
+			params,
+		},
+		"*"
+	);
 }
