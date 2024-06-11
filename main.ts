@@ -160,29 +160,30 @@ export default class MxmindPlugin extends Plugin {
 	// }
 	async toggleView() {
 		const { workspace } = this.app;
-
+		this.toggleCollapseRight();
 		let leaf: WorkspaceLeaf | null = null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
 
 		if (leaves.length > 0) {
 			// A leaf with our view already exists, use that
 			leaf = leaves[0];
-			this.toggleCollapseRight();
+
+			workspace.setActiveLeaf(leaf);
 		} else {
 			// Our view could not be found in the workspace, create a new leaf
 			// in the right sidebar for it
 			leaf = workspace.getRightLeaf(false);
 			await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
 		}
-		if (leaf.getViewState().active) {
-			iframe?.contentWindow?.postMessage(
-				{
-					method: "fullScreen",
-					params: [],
-				},
-				"*"
-			);
-		}
+
+		iframe?.contentWindow?.postMessage(
+			{
+				method: "fullScreen",
+				params: [],
+			},
+			"*"
+		);
+
 		// "Reveal" the leaf in case it is in a collapsed sidebar
 		//workspace.revealLeaf(leaf);
 	}
@@ -228,16 +229,20 @@ export class MxmindIframeView extends ItemView {
 	getDisplayText() {
 		return "Mxmind";
 	}
+	getIcon() {
+		return "network";
+	}
 
 	async onOpen() {
 		const container = this.containerEl.children[1];
 		container.empty();
 		const int = setInterval(() => {
 			//@ts-ignore
-			if (this.leaf.tabHeaderEl&&this.leaf.tabHeaderEl.parentElement) {
+			if (this.leaf.tabHeaderEl && this.leaf.tabHeaderEl.parentElement) {
 				clearInterval(int);
 				//@ts-ignore
-				this.leaf.tabHeaderEl.parentElement.style.display = "none";
+				console.log(this.leaf.tabHeaderEl.parentElement);
+				//this.leaf.tabHeaderEl.parentElement.style.display = "none";
 			}
 		}, 100);
 		container.setAttribute(
