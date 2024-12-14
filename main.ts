@@ -33,7 +33,7 @@ function getLanguage() {
 
 const getUrl = () => {
 	return (
-		"https://mxmind.com/mindmap/new?utm_source=obsidian&theme=" +
+		"https://mxmind.com/mindmap/new?utm_source=obsidian&utm_medium=plugin&theme=" +
 		getTheme() +
 		"&lng=" +
 		getLanguage()
