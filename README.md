@@ -5,18 +5,18 @@ Mxmind (https://mxmind.com) a mind map tool.
 
 
 ## Note
-⚠️This Plugin use Mxmind.com remote service.
-⚠️Some features need your create mxmind.com account,eg:save and sync mind map file.
+  - ⚠️This Plugin use Mxmind.com remote service.
+  - ⚠️Some features need your create mxmind.com account,eg:save and sync mind map file.
 
 ## Markdown to mind map
 
 choose markdown file in obsidian,Right click on a markdown file, then choose `Mind map`.
 
-[](https://github.com/webceoboy/mxmind-obsidian/blob/main/static/screenshot1.png?raw=true)
+![screenshot](https://github.com/webceoboy/mxmind-obsidian/blob/main/static/screenshot1.png?raw=true)
 
 ## Mind map Editor
 
-[](https://github.com/webceoboy/mxmind-obsidian/blob/main/static/screenshot2.png?raw=true)
+![screenshot](https://github.com/webceoboy/mxmind-obsidian/blob/main/static/screenshot2.png?raw=true)
 
 ##  Useage
 
