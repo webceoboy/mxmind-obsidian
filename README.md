@@ -12,11 +12,14 @@ Mxmind (https://mxmind.com) a mind map tool.
 
 choose markdown file in obsidian,Right click on a markdown file, then choose `Mind map`.
 
-[![J11wdOv.md.png](https://iili.io/J11wdOv.md.png)](https://freeimage.host/i/J11wdOv)
+[](https://github.com/webceoboy/mxmind-obsidian/blob/main/static/screenshot1.png?raw=true)
 
-[![J11jRKF.md.png](https://iili.io/J11jRKF.md.png)](https://freeimage.host/i/J11jRKF)
+## Mind map Editor
 
-##  Mind map editor
+[](https://github.com/webceoboy/mxmind-obsidian/blob/main/static/screenshot2.png?raw=true)
+
+##  Useage
+
 choose `Mxmind` in left sidebar.
 
 ## Privacy

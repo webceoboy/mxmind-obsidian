@@ -151,41 +151,28 @@ export default class MxmindPlugin extends Plugin {
 
 	onunload() {}
 
-	// async loadSettings() {
-	// 	this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	// }
-
-	// async saveSettings() {
-	// 	await this.saveData(this.settings);
-	// }
 	async toggleView() {
 		const { workspace } = this.app;
-		this.toggleCollapseRight();
-		let leaf: WorkspaceLeaf | null = null;
-		const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
-
-		if (leaves.length > 0) {
-			// A leaf with our view already exists, use that
-			leaf = leaves[0];
-
-			workspace.setActiveLeaf(leaf);
+		const rightSplit = this.app.workspace.rightSplit;
+		if (rightSplit.collapsed) rightSplit.expand();
+		// 检查是否已经有该视图打开
+		const existingLeaf = workspace
+			.getLeavesOfType(VIEW_TYPE_EXAMPLE)
+			.first();
+		if (existingLeaf) {
+			workspace.revealLeaf(existingLeaf);
+			this.isIframeOpen = true;
 		} else {
-			// Our view could not be found in the workspace, create a new leaf
-			// in the right sidebar for it
-			leaf = workspace.getRightLeaf(false);
-			await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
+			// 如果视图不存在，打开它
+			const leaf = workspace.getRightLeaf(false); // 在右侧创建新的叶子
+			if (leaf) {
+				await leaf.setViewState({
+					type: VIEW_TYPE_EXAMPLE,
+				});
+				workspace.revealLeaf(leaf);
+				this.isIframeOpen = true;
+			}
 		}
-
-		iframe?.contentWindow?.postMessage(
-			{
-				method: "fullScreen",
-				params: [],
-			},
-			"*"
-		);
-
-		// "Reveal" the leaf in case it is in a collapsed sidebar
-		//workspace.revealLeaf(leaf);
 	}
 
 	async activateView() {
