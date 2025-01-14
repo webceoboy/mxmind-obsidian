@@ -5,6 +5,7 @@ import {
 	Plugin,
 	WorkspaceLeaf,
 	TFile,
+	Menu,
 } from "obsidian";
 
 let iframe: HTMLIFrameElement | null = null;
@@ -125,9 +126,10 @@ export default class MxmindPlugin extends Plugin {
 				if (!(file instanceof TFile)) return;
 				//const {vault} = this.app;
 				menu.addItem((item) => {
-					item.setTitle("Open as mindmap")
+					item.setTitle(trans("Open as mindmap"))
 						.setIcon("document")
 						.onClick(async () => {
+							ready = false; //重新赋值，不然第二次true
 							//const leaf = await this.activateView();
 							const content = await this.app.vault.cachedRead(
 								file
@@ -147,6 +149,7 @@ export default class MxmindPlugin extends Plugin {
 				postIframeMessage("setTheme", [getTheme()]);
 			})
 		);
+		
 	}
 
 	onunload() {}
@@ -200,6 +203,13 @@ export default class MxmindPlugin extends Plugin {
 
 		rightSplit.collapsed ? rightSplit.expand() : rightSplit.collapse();
 	}
+	activeLeafPath(workspace: Workspace) {
+		return workspace.activeLeaf?.view.getState().file;
+	}
+
+	activeLeafName(workspace: Workspace) {
+		return workspace.activeLeaf?.getDisplayText();
+	}
 }
 
 export class MxmindIframeView extends ItemView {
@@ -247,21 +257,44 @@ export class MxmindIframeView extends ItemView {
 					style: "width:100%;height:100%;",
 					src: getUrl(),
 					frameborder: "0",
+					allow: "accelerometer;gyroscope",
 				},
 			},
 			(el) => {
 				iframe = el;
 			}
 		);
-		container.win.onmessage = (event: MessageEvent) => {
+		container.win.onmessage = async (event: MessageEvent) => {
 			if (event.data.event && event.data.event == "editor-ready") {
 				ready = true;
+			}
+			if (event.data.method == "exportDataUrl") {
+				const rsp = await fetch(event.data.result);
+				const item = new ClipboardItem({ "image/png": rsp.blob() });
+				navigator.clipboard.write([item]);
+				new Notice(trans("Image copied to the clipboard."));
 			}
 		};
 	}
 
 	async onClose() {
 		// Nothing to clean up.
+	}
+	onPaneMenu(menu: Menu, source: "more-options" | "tab-header" | string) {
+		menu.addItem((item) =>
+			item
+				.setIcon("image-file")
+				.setTitle(trans("Copy image"))
+				.onClick(() => {
+					iframe?.contentWindow?.postMessage(
+						{
+							method: "exportDataUrl",
+							params: [],
+						},
+						"*"
+					);
+				})
+		);
 	}
 }
 
@@ -295,4 +328,15 @@ function postIframeMessage(method: string, params: Array<any>) {
 		},
 		"*"
 	);
+}
+function trans(str: string) {
+	const cn = {
+		"Copy image": "复制图片",
+		"Open as mindmap": "转为思维导图",
+		"Image copied to the clipboard.": "图片已经复制到剪切板。",
+	};
+	if (moment.locale().includes("zh")) {
+		return cn[str] || str;
+	}
+	return str;
 }
