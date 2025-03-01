@@ -6,6 +6,8 @@ import {
 	WorkspaceLeaf,
 	TFile,
 	Menu,
+	MarkdownView,
+	Notice,
 } from "obsidian";
 
 let iframe: HTMLIFrameElement | null = null;
@@ -40,13 +42,17 @@ const getUrl = () => {
 		getLanguage()
 	);
 };
-// const reOpen=()=>{
-// 	ready=false;
-// 	if(iframe)iframe.src=getUrl()+'&_='+(new Date).getTime();
-// }
+
+async function file2mindmap(file: TFile) {
+	const content = await this.app.vault.cachedRead(file);
+	//console.log(content)
+	const post = async () => {
+		postIframeMessage("loadFromMd", [content]);
+	};
+	waitEditor().then(post).catch(post);
+}
 export default class MxmindPlugin extends Plugin {
 	//settings: MyPluginSettings;
-
 	async onload() {
 		//await this.loadSettings();
 		this.registerView(
@@ -57,66 +63,17 @@ export default class MxmindPlugin extends Plugin {
 		const ribbonIconEl = this.addRibbonIcon(
 			"network",
 			"Mxmind",
-			(evt: MouseEvent) => {
+			async (evt: MouseEvent) => {
 				// Called when the user clicks the icon.
 				//new Notice('This is a notice!');
 				this.toggleView();
+				const activeFile = this.app.workspace.getActiveFile();
+				if (activeFile && activeFile.extension == "md") {
+					await this.activateView();
+					await file2mindmap(activeFile);
+				}
 			}
 		);
-		// Perform additional things with the ribbon
-		//ribbonIconEl.addClass('mxmind');
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		// const statusBarItemEl = this.addStatusBarItem();
-		// statusBarItemEl.setText('Status Bar Text');
-
-		// This adds a simple command that can be triggered anywhere
-		// this.addCommand({
-		// 	id: 'open-sample-modal-simple',
-		// 	name: 'Open sample modal (simple)',
-		// 	callback: () => {
-		// 		new SampleModal(this.app).open();
-		// 	}
-		// });
-		// This adds an editor command that can perform some operation on the current editor instance
-		// this.addCommand({
-		// 	id: 'sample-editor-command',
-		// 	name: 'Sample editor command',
-		// 	editorCallback: (editor: Editor, view: MarkdownView) => {
-		// 		console.log(editor.getSelection());
-		// 		editor.replaceSelection('Sample Editor Command');
-		// 	}
-		// });
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		// this.addCommand({
-		// 	id: 'open-sample-modal-complex',
-		// 	name: 'Open sample modal (complex)',
-		// 	checkCallback: (checking: boolean) => {
-		// 		// Conditions to check
-		// 		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		// 		if (markdownView) {
-		// 			// If checking is true, we're simply "checking" if the command can be run.
-		// 			// If checking is false, then we want to actually perform the operation.
-		// 			if (!checking) {
-		// 				new SampleModal(this.app).open();
-		// 			}
-
-		// 			// This command will only show up in Command Palette when the check function returns true
-		// 			return true;
-		// 		}
-		// 	}
-		// });
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		//this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		// this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-		// 	console.log('click', evt);
-		// });
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 
 		this.registerEvent(
 			this.app.workspace.on("file-menu", (menu, file) => {
@@ -129,17 +86,10 @@ export default class MxmindPlugin extends Plugin {
 					item.setTitle(trans("Open as mindmap"))
 						.setIcon("document")
 						.onClick(async () => {
-							ready = false; //重新赋值，不然第二次true
+							
 							//const leaf = await this.activateView();
-							const content = await this.app.vault.cachedRead(
-								file
-							);
-							//console.log(content)
-							const post = async () => {
-								postIframeMessage("loadFromMd", [content]);
-							};
 							await this.activateView();
-							waitEditor().then(post).catch(post);
+							await file2mindmap(file);
 						});
 				});
 			})
@@ -149,7 +99,13 @@ export default class MxmindPlugin extends Plugin {
 				postIframeMessage("setTheme", [getTheme()]);
 			})
 		);
-		
+		this.registerEvent(
+			this.app.vault.on("modify", async (file) => {
+				if (!ready) return;
+				// 在这里处理文件修改
+				await file2mindmap(file);
+			})
+		);
 	}
 
 	onunload() {}
@@ -164,7 +120,6 @@ export default class MxmindPlugin extends Plugin {
 			.first();
 		if (existingLeaf) {
 			workspace.revealLeaf(existingLeaf);
-			this.isIframeOpen = true;
 		} else {
 			// 如果视图不存在，打开它
 			const leaf = workspace.getRightLeaf(false); // 在右侧创建新的叶子
@@ -173,7 +128,6 @@ export default class MxmindPlugin extends Plugin {
 					type: VIEW_TYPE_EXAMPLE,
 				});
 				workspace.revealLeaf(leaf);
-				this.isIframeOpen = true;
 			}
 		}
 	}
@@ -275,10 +229,12 @@ export class MxmindIframeView extends ItemView {
 				new Notice(trans("Image copied to the clipboard."));
 			}
 		};
+	
 	}
 
 	async onClose() {
 		// Nothing to clean up.
+		ready = false;
 	}
 	onPaneMenu(menu: Menu, source: "more-options" | "tab-header" | string) {
 		menu.addItem((item) =>
