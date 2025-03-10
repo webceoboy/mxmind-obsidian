@@ -1,7 +1,7 @@
 {
 	"id": "mxmind",
 	"name": "Mxmind Mindmap",
-	"version": "1.0.17",
+	"version": "1.0.18",
 	"minAppVersion": "0.15.0",
 	"description": "Convert Markdown files to a mind map, mind map editor. export to image or pdf.",
 	"author": "mxmind",
