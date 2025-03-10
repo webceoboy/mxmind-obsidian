@@ -8,6 +8,8 @@ import {
 	Menu,
 	MarkdownView,
 	Notice,
+	TAbstractFile,
+	Workspace,
 } from "obsidian";
 
 let iframe: HTMLIFrameElement | null = null;
@@ -35,19 +37,24 @@ function getLanguage() {
 }
 
 const getUrl = () => {
+	//const base='"https://mxmind.com';
+	const base = "http://localhost:3000";
 	return (
-		"https://mxmind.com/mindmap/new?utm_source=obsidian&utm_medium=plugin&theme=" +
+		base +
+		"/mindmap/new?utm_source=obsidian&utm_medium=plugin&theme=" +
 		getTheme() +
 		"&lng=" +
 		getLanguage()
 	);
 };
 
-async function file2mindmap(file: TFile) {
+async function file2mindmap(file: TAbstractFile, update = false) {
 	const content = await this.app.vault.cachedRead(file);
 	//console.log(content)
 	const post = async () => {
-		postIframeMessage("loadFromMd", [content]);
+		postIframeMessage(update ? "updateFromMarkdown" : "loadFromMd", [
+			content,
+		]);
 	};
 	waitEditor().then(post).catch(post);
 }
@@ -86,7 +93,6 @@ export default class MxmindPlugin extends Plugin {
 					item.setTitle(trans("Open as mindmap"))
 						.setIcon("document")
 						.onClick(async () => {
-							
 							//const leaf = await this.activateView();
 							await this.activateView();
 							await file2mindmap(file);
@@ -102,8 +108,31 @@ export default class MxmindPlugin extends Plugin {
 		this.registerEvent(
 			this.app.vault.on("modify", async (file) => {
 				if (!ready) return;
-				// 在这里处理文件修改
-				await file2mindmap(file);
+
+				// 保存当前活动视图引用
+				const activeView =
+					this.app.workspace.getActiveViewOfType(MarkdownView);
+
+				// 验证是否是当前正在编辑的文件
+				if (activeView && activeView.file === file) {
+					// 在这里更新右侧的leaf
+					setTimeout(async () => {
+						await file2mindmap(file, true);
+					}, 10);
+
+					// 增加延迟时间
+					setTimeout(() => {
+						// 重新检查视图是否仍然存在和活动
+						if (activeView) {
+							console.log("尝试恢复焦点");
+							activeView.editor.focus();
+
+							// 可选:设置光标位置以确保可见
+							const cursor = activeView.editor.getCursor();
+							activeView.editor.setCursor(cursor);
+						}
+					}, 100); // 增加延迟到100ms
+				}
 			})
 		);
 	}
@@ -229,7 +258,6 @@ export class MxmindIframeView extends ItemView {
 				new Notice(trans("Image copied to the clipboard."));
 			}
 		};
-	
 	}
 
 	async onClose() {
@@ -286,7 +314,7 @@ function postIframeMessage(method: string, params: Array<any>) {
 	);
 }
 function trans(str: string) {
-	const cn = {
+	const cn:Record<string,string> = {
 		"Copy image": "复制图片",
 		"Open as mindmap": "转为思维导图",
 		"Image copied to the clipboard.": "图片已经复制到剪切板。",
