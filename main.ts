@@ -37,8 +37,8 @@ function getLanguage() {
 }
 
 const getUrl = () => {
-	//const base='"https://mxmind.com';
-	const base = "http://localhost:3000";
+	const base='"https://mxmind.com';
+	//const base = "http://localhost:3000";
 	return (
 		base +
 		"/mindmap/new?utm_source=obsidian&utm_medium=plugin&theme=" +
