@@ -1,6 +1,6 @@
 {
 	"name": "mxmind for obsidian",
-	"version": "1.0.18",
+	"version": "1.0.19",
 	"description": "mxmind for obsidian",
 	"main": "main.js",
 	"scripts": {
@@ -20,5 +20,8 @@
 		"obsidian": "latest",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
+	},
+	"dependencies": {
+		"lodash-es": "^4.17.21"
 	}
 }

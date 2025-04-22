@@ -10,8 +10,9 @@ import {
 	Notice,
 	TAbstractFile,
 	Workspace,
+	App,
 } from "obsidian";
-
+import { debounce } from "lodash-es";
 let iframe: HTMLIFrameElement | null = null;
 let ready = false;
 // Remember to rename these classes and interfaces!
@@ -37,7 +38,7 @@ function getLanguage() {
 }
 
 const getUrl = () => {
-	const base='https://mxmind.com';
+	const base = "https://mxmind.com";
 	//const base = "http://localhost:3000";
 	return (
 		base +
@@ -51,13 +52,42 @@ const getUrl = () => {
 async function file2mindmap(file: TAbstractFile, update = false) {
 	const content = await this.app.vault.cachedRead(file);
 	//console.log(content)
-	const post = async () => {
+	const post = () => {
 		postIframeMessage(update ? "updateFromMarkdown" : "loadFromMd", [
 			content,
 		]);
 	};
-	waitEditor().then(post).catch(post);
+	try {
+		await waitEditor();
+		post();
+	} catch (e) {
+		post();
+	}
 }
+async function saveAndRevealFile(app: App, blob: Blob, filePath: string) {
+	// 保存文件
+	const arrayBuffer = await blob.arrayBuffer();
+	const uint8Array = new Uint8Array(arrayBuffer);
+	const f = app.vault.getAbstractFileByPath(filePath);
+	if (f) {
+		app.vault.delete(f);
+	}
+	await app.vault.createBinary(filePath, uint8Array);
+
+	// 获取保存的文件
+	const file = app.vault.getAbstractFileByPath(filePath);
+	if (!file) return;
+
+	// 在编辑器中打开文件
+	//await app.workspace.getLeaf().openFile(file);
+
+	// 在文件浏览器中定位文件
+	const fileExplorer = app.workspace.getLeavesOfType("file-explorer")[0];
+	if (fileExplorer && fileExplorer.view.revealInFolder) {
+		fileExplorer.view.revealInFolder(file);
+	}
+}
+
 export default class MxmindPlugin extends Plugin {
 	//settings: MyPluginSettings;
 	async onload() {
@@ -105,10 +135,9 @@ export default class MxmindPlugin extends Plugin {
 				postIframeMessage("setTheme", [getTheme()]);
 			})
 		);
-		this.registerEvent(
-			this.app.vault.on("modify", async (file) => {
-				if (!ready) return;
 
+		const onModify = debounce(
+			async (file) => {
 				// 保存当前活动视图引用
 				const activeView =
 					this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -116,23 +145,22 @@ export default class MxmindPlugin extends Plugin {
 				// 验证是否是当前正在编辑的文件
 				if (activeView && activeView.file === file) {
 					// 在这里更新右侧的leaf
-					setTimeout(async () => {
-						await file2mindmap(file, true);
-					}, 10);
-
-					// 增加延迟时间
+					const cursor = activeView.editor.getCursor();
+					await file2mindmap(file, true);
 					setTimeout(() => {
-						// 重新检查视图是否仍然存在和活动
-						if (activeView) {
-							console.log("尝试恢复焦点");
-							activeView.editor.focus();
-
-							// 可选:设置光标位置以确保可见
-							const cursor = activeView.editor.getCursor();
-							activeView.editor.setCursor(cursor);
-						}
-					}, 100); // 增加延迟到100ms
+						activeView.editor.focus();
+						// 可选:设置光标位置以确保可见
+						activeView.editor.setCursor(cursor);
+					}, 20);
 				}
+			},
+			1500,
+			{ trailing: true }
+		);
+		this.registerEvent(
+			this.app.vault.on("modify", async (file) => {
+				if (!ready) return;
+				onModify(file);
 			})
 		);
 	}
@@ -257,6 +285,16 @@ export class MxmindIframeView extends ItemView {
 				navigator.clipboard.write([item]);
 				new Notice(trans("Image copied to the clipboard."));
 			}
+			if (event.data.method == "download") {
+				let [fileName, blob] = event.data.result;
+				await saveAndRevealFile(
+					this.app,
+					blob,
+					decodeURIComponent(fileName)
+				);
+				new Notice(trans("Download complete"));
+			}
+			console.log(event);
 		};
 	}
 
@@ -314,10 +352,11 @@ function postIframeMessage(method: string, params: Array<any>) {
 	);
 }
 function trans(str: string) {
-	const cn:Record<string,string> = {
+	const cn: Record<string, string> = {
 		"Copy image": "复制图片",
 		"Open as mindmap": "转为思维导图",
 		"Image copied to the clipboard.": "图片已经复制到剪切板。",
+		"Download complete": "下载完成",
 	};
 	if (moment.locale().includes("zh")) {
 		return cn[str] || str;
