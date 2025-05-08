@@ -1,6 +1,6 @@
 {
 	"name": "mxmind for obsidian",
-	"version": "1.0.19",
+	"version": "1.0.20",
 	"description": "mxmind for obsidian",
 	"main": "main.js",
 	"scripts": {

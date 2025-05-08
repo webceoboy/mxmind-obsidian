@@ -79,7 +79,7 @@ async function saveAndRevealFile(app: App, blob: Blob, filePath: string) {
 	if (!file) return;
 
 	// 在编辑器中打开文件
-	//await app.workspace.getLeaf().openFile(file);
+	await app.workspace.getLeaf(true).openFile(file);
 
 	// 在文件浏览器中定位文件
 	const fileExplorer = app.workspace.getLeavesOfType("file-explorer")[0];
